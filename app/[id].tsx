@@ -1,6 +1,8 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Button, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+// 👇 Import AsyncStorage buat syarat Local Storage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Import fungsi API 
 import { addReview, deleteMovie, getDeviceId, getMovieDetail, getReviews, updateMovie, updateReview } from '../services/api';
@@ -63,6 +65,16 @@ export default function DetailScreen() {
       const myRev = filter.find((r: any) => r.device_id === myId);
       setMyReview(myRev || null);
       
+      // 👇 LOGIKA LOCAL STORAGE: Ambil nama yang tersimpan di HP
+      try {
+        const savedName = await AsyncStorage.getItem('user_name');
+        if (savedName) {
+          setName(savedName); // Otomatis isi kolom nama
+        }
+      } catch (e) {
+        console.log("Gagal ambil nama", e);
+      }
+      
       setLoading(false);
     }
   };
@@ -110,7 +122,13 @@ export default function DetailScreen() {
     setLoadingReview(false); // 👇 Stop Buffering
 
     if (sukses) {
-      setName(''); setRating(''); setComment('');
+      // 👇 LOGIKA LOCAL STORAGE: Simpan nama ke HP biar diingat
+      await AsyncStorage.setItem('user_name', name);
+
+      // Reset form kecuali nama (biar UX enak)
+      setRating(''); 
+      setComment('');
+      
       refreshData();
       Alert.alert("Mantap", "Review terkirim!");
     } else {
@@ -144,7 +162,7 @@ export default function DetailScreen() {
     }
   };
 
-  // 👇 PERBAIKAN UTAMA: Handle Loading Screen AGAR TIDAK MUNCUL [id]
+  // 👇 Handle Loading Screen AGAR TIDAK MUNCUL [id]
   if (loading) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
@@ -182,7 +200,8 @@ export default function DetailScreen() {
 
       {movie && (
         <>
-          <Image source={{ uri: movie.poster }} style={styles.poster} />
+          {/* 👇 Ganti resizeMode jadi COVER biar full screen cantik */}
+          <Image source={{ uri: movie.poster }} style={styles.poster} resizeMode="cover" />
           
           <View style={styles.sectionFilm}>
             <Text style={styles.judul}>{movie.title}</Text>
@@ -317,7 +336,8 @@ export default function DetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
-  poster: { width: '100%', height: 450, resizeMode: 'contain', backgroundColor: '#eee' },
+  // 👇 Ganti jadi COVER biar rapi full width
+  poster: { width: '100%', height: 450, resizeMode: 'cover', backgroundColor: '#eee' },
   sectionFilm: { padding: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
   judul: { fontSize: 26, fontWeight: 'bold', color: '#000', marginBottom: 5 },
   
