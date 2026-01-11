@@ -1,33 +1,25 @@
+import { Ionicons } from '@expo/vector-icons'; // Ikon bawaan Expo
 import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+    <Tabs screenOptions={{ tabBarActiveTintColor: 'blue' }}>
+      
+      {/* Tab 1: Home (Daftar Film) */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Daftar Film',
+          tabBarIcon: ({ color }) => <Ionicons name="film" size={24} color={color} />,
         }}
       />
+
+      {/* Tab 2: Tambah Film */}
       <Tabs.Screen
-        name="explore"
+        name="add"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Tambah Film',
+          tabBarIcon: ({ color }) => <Ionicons name="add-circle" size={24} color={color} />,
         }}
       />
     </Tabs>
