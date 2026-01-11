@@ -1,10 +1,8 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'; // Buat local storage
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Button, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
-// 👇 Import AsyncStorage buat syarat Local Storage
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Import fungsi API 
 import { addReview, deleteMovie, getDeviceId, getMovieDetail, getReviews, updateMovie, updateReview } from '../services/api';
 import { Movie } from '../types';
 
@@ -16,17 +14,16 @@ export default function DetailScreen() {
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   
-  // State Logika Kepemilikan
+  // Logic buat cek owner
   const [isOwner, setIsOwner] = useState(false); 
   const [myReview, setMyReview] = useState<any>(null); 
   
   const [refreshing, setRefreshing] = useState(false);
 
-  // Form Input Review
+  // Form input review
   const [name, setName] = useState('');
   const [rating, setRating] = useState('');
   const [comment, setComment] = useState('');
-  // State Loading khusus tombol kirim review
   const [loadingReview, setLoadingReview] = useState(false);
 
   // Modal Edit FILM
@@ -49,27 +46,25 @@ export default function DetailScreen() {
       const movieData = await getMovieDetail(Number(id));
       setMovie(movieData);
 
-      // Cek Pemilik Film
+      // Validasi owner film
       if (movieData && movieData.owner_id === myId) {
         setIsOwner(true);
       } else {
         setIsOwner(false);
       }
 
-      // Ambil Review
       const allReviews = await getReviews();
       const filter = allReviews.filter((r: any) => r.movies_id === Number(id));
       setReviews(filter);
 
-      // Cek Review Saya
       const myRev = filter.find((r: any) => r.device_id === myId);
       setMyReview(myRev || null);
       
-      // 👇 LOGIKA LOCAL STORAGE: Ambil nama yang tersimpan di HP
+      // Local Storage: Ambil nama user kalau ada
       try {
         const savedName = await AsyncStorage.getItem('user_name');
         if (savedName) {
-          setName(savedName); // Otomatis isi kolom nama
+          setName(savedName);
         }
       } catch (e) {
         console.log("Gagal ambil nama", e);
@@ -87,7 +82,7 @@ export default function DetailScreen() {
     setRefreshing(false);
   }, [id]);
 
-  // --- LOGIC FILM (HAPUS & EDIT) ---
+  // --- LOGIC HAPUS & EDIT FILM ---
   const handleHapus = () => {
       Alert.alert("Hapus Film?", "Yakin?", [{ text: "Batal" }, { text: "Hapus", style: 'destructive', onPress: async () => {
           await deleteMovie(Number(id)); router.replace('/(tabs)');
@@ -102,30 +97,29 @@ export default function DetailScreen() {
   };
 
   const handleSimpanEditFilm = async () => {
-    setLoadingEdit(true); // Mulai Buffering
+    setLoadingEdit(true); // Mulai loading
     const success = await updateMovie(Number(id), { title: editTitle, release_year: parseInt(editYear), description: editDesc, poster: editPoster });
-    setLoadingEdit(false); // Stop Buffering
+    setLoadingEdit(false); 
     
     if (success) { setModalFilmVisible(false); refreshData(); Alert.alert("Sukses", "Film diupdate!"); }
   };
 
-  // --- LOGIC REVIEW (KIRIM & EDIT) ---
+  // --- LOGIC KIRIM & EDIT REVIEW ---
   const handleKirimReview = async () => {
     const angkaRating = parseFloat(rating);
     if (angkaRating < 1 || angkaRating > 10 || isNaN(angkaRating)) return Alert.alert("Error", "Rating 1-10 woy!");
     if (!name || !comment) return Alert.alert("Error", "Isi semua data!");
 
-    setLoadingReview(true); // 👇 Mulai Buffering Tombol Review
+    setLoadingReview(true); // Loading tombol review
 
     const sukses = await addReview(Number(id), name, angkaRating, comment);
     
-    setLoadingReview(false); // 👇 Stop Buffering
+    setLoadingReview(false); 
 
     if (sukses) {
-      // 👇 LOGIKA LOCAL STORAGE: Simpan nama ke HP biar diingat
+      // Simpan nama ke local storage buat next time
       await AsyncStorage.setItem('user_name', name);
 
-      // Reset form kecuali nama (biar UX enak)
       setRating(''); 
       setComment('');
       
@@ -162,11 +156,10 @@ export default function DetailScreen() {
     }
   };
 
-  // 👇 Handle Loading Screen AGAR TIDAK MUNCUL [id]
+  // Render loading screen manual biar header aman
   if (loading) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'}}>
-        {/* Paksa judul jadi 'Sedang Memuat...' saat loading */}
         <Stack.Screen options={{ 
             title: 'Sedang Memuat...', 
             headerTintColor: '#000',
@@ -177,7 +170,6 @@ export default function DetailScreen() {
     );
   }
 
-  // Jika film tidak ditemukan setelah loading selesai
   if (!movie) {
      return (
         <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
@@ -187,11 +179,9 @@ export default function DetailScreen() {
      );
   }
 
-  // --- RENDER UTAMA (SETELAH DATA ADA) ---
   return (
     <ScrollView style={styles.container} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}>
       
-      {/* Header Judul Film Asli */}
       <Stack.Screen options={{ 
           title: movie.title, 
           headerTintColor: '#000',
@@ -200,7 +190,6 @@ export default function DetailScreen() {
 
       {movie && (
         <>
-          {/* 👇 Ganti resizeMode jadi COVER biar full screen cantik */}
           <Image source={{ uri: movie.poster }} style={styles.poster} resizeMode="cover" />
           
           <View style={styles.sectionFilm}>
@@ -208,7 +197,7 @@ export default function DetailScreen() {
             <Text style={{color: '#666', marginBottom: 10, fontSize: 16}}>Tahun: {movie.release_year}</Text>
             <Text style={{lineHeight: 22}}>{movie.description}</Text>
 
-            {/* Tombol Edit/Hapus Film (Owner Only) */}
+            {/* Menu Edit/Hapus khusus Owner */}
             {isOwner && (
                 <View style={styles.actionButtons}>
                     <TouchableOpacity onPress={bukaModalEditFilm} style={[styles.btnAction, {backgroundColor: '#FFA500'}]}>
@@ -241,17 +230,16 @@ export default function DetailScreen() {
              </TouchableOpacity>
           </View>
         ) : (
-          /* Form Input Review */
+          /* Input Review Form */
           <>
             <TextInput placeholder="Nama Kamu" placeholderTextColor="#999" style={styles.input} value={name} onChangeText={setName} />
             <TextInput placeholder="Rating (1-10)" placeholderTextColor="#999" keyboardType="numeric" maxLength={2} style={styles.input} value={rating} onChangeText={setRating} />
             <TextInput placeholder="Komentar kamu..." placeholderTextColor="#999" style={[styles.input, {height: 80}]} multiline value={comment} onChangeText={setComment} textAlignVertical="top" />
             
-            {/* 👇 TOMBOL KIRIM DENGAN BUFFERING */}
             <TouchableOpacity 
                 style={[styles.btnPrimary, { opacity: loadingReview ? 0.7 : 1 }]} 
                 onPress={handleKirimReview}
-                disabled={loadingReview} // Matikan tombol saat loading
+                disabled={loadingReview}
             >
                 {loadingReview ? (
                     <ActivityIndicator color="#fff" />
@@ -282,7 +270,7 @@ export default function DetailScreen() {
       </View>
       <View style={{height: 50}} />
 
-      {/* --- MODAL EDIT FILM --- */}
+      {/* MODAL COMPONENTS */}
       <Modal animationType="slide" transparent={true} visible={modalFilmVisible} onRequestClose={() => setModalFilmVisible(false)}>
          <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -309,7 +297,6 @@ export default function DetailScreen() {
          </View>
       </Modal>
 
-      {/* --- MODAL EDIT REVIEW --- */}
       <Modal animationType="slide" transparent={true} visible={modalReviewVisible} onRequestClose={() => setModalReviewVisible(false)}>
          <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
@@ -336,7 +323,6 @@ export default function DetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
-  // 👇 Ganti jadi COVER biar rapi full width
   poster: { width: '100%', height: 450, resizeMode: 'cover', backgroundColor: '#eee' },
   sectionFilm: { padding: 20, backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#eee' },
   judul: { fontSize: 26, fontWeight: 'bold', color: '#000', marginBottom: 5 },
@@ -344,7 +330,7 @@ const styles = StyleSheet.create({
   actionButtons: { flexDirection: 'row', marginTop: 20 },
   btnAction: { flex: 1, padding: 12, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
   
-  sectionForm: { padding: 20, backgroundColor: '#F0F8FF', margin: 15, borderRadius: 12 }, // AliceBlue background
+  sectionForm: { padding: 20, backgroundColor: '#F0F8FF', margin: 15, borderRadius: 12 }, 
   myReviewCard: { backgroundColor: '#fff', padding: 15, borderRadius: 8, borderWidth: 1, borderColor: '#007AFF' },
   btnEditReview: { marginTop: 15, backgroundColor: '#FFA500', padding: 10, borderRadius: 5, alignItems: 'center' },
   

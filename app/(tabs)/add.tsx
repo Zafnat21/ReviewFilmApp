@@ -7,19 +7,20 @@ export default function TambahScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // State Form
+  // State buat nampung input user
   const [title, setTitle] = useState('');
   const [year, setYear] = useState('');
   const [desc, setDesc] = useState('');
   const [poster, setPoster] = useState('');
 
   const handleSimpan = async () => {
+    // Validasi input kosong
     if (!title || !year || !desc || !poster) {
       Alert.alert("Eits!", "Semua kolom wajib diisi ya brow.");
       return;
     }
 
-    setLoading(true); // 👇 Aktifkan Buffering
+    setLoading(true); // Disable tombol pas loading
 
     const success = await addMovie({
       title: title,
@@ -28,7 +29,7 @@ export default function TambahScreen() {
       poster: poster
     });
 
-    setLoading(false); // 👇 Matikan Buffering
+    setLoading(false);
 
     if (success) {
       Alert.alert("Berhasil!", "Film baru udah masuk database.");
@@ -40,6 +41,7 @@ export default function TambahScreen() {
   };
 
   return (
+    // Handle keyboard biar ga nutupin input
     <KeyboardAvoidingView 
       style={{ flex: 1, backgroundColor: '#fff' }} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
@@ -70,11 +72,11 @@ export default function TambahScreen() {
         />
 
         <View style={{ marginTop: 30 }}>
-          {/* 👇 TOMBOL DENGAN LOADING STATE AGAR TIDAK DOUBLE CLICK */}
+          {/* Tombol disable pas loading biar ga double submit */}
           <TouchableOpacity 
             style={[styles.btnSimpan, { opacity: loading ? 0.7 : 1 }]}
             onPress={handleSimpan}
-            disabled={loading} // Cegah klik saat loading
+            disabled={loading}
           >
              {loading ? (
                 <ActivityIndicator color="#fff" />

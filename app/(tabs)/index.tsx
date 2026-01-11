@@ -10,18 +10,21 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Fetch data dari API
   const ambilData = async () => {
     const data = await getMovies();
     setMovies(data);
     setLoading(false);
   };
 
+  // Logic pull-to-refresh
   const onRefresh = async () => {
     setRefreshing(true);
     await ambilData();
     setRefreshing(false);
   };
 
+  // Auto refresh pas balik ke layar ini
   useFocusEffect(
     useCallback(() => {
       ambilData();
@@ -39,7 +42,6 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header dengan warna Biru Logo ReFilm */}
       <View style={styles.headerContainer}>
           <Text style={styles.headerTitle}>🍿 ReFilm</Text>
           <Text style={styles.headerSubtitle}>Koleksi & Review Film</Text>
@@ -60,7 +62,7 @@ export default function HomeScreen() {
                <Image 
                   source={{ uri: item.poster ? item.poster : 'https://via.placeholder.com/150' }} 
                   style={styles.poster} 
-                  resizeMode="cover"
+                  resizeMode="cover" // Biar gambar full kotak
                />
                <View style={styles.cardInfo}>
                   <Text style={styles.title} numberOfLines={2}>{item.title}</Text>

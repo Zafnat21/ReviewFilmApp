@@ -1,50 +1,38 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 🔗 URL DATABASE XANO KAMU
+// Endpoint API Xano
 const BASE_URL = 'https://x8ki-letl-twmt.n7.xano.io/api:zO4A15ca'; 
 
-// ====================================================================
-// 🆔 BAGIAN 1: SISTEM IDENTITAS (TANPA LOGIN RIBET)
-// ====================================================================
-
-// Fungsi buat bikin atau ambil ID unik HP ini
+// Function buat generate ID unik HP (gantiin sistem login)
 export const getDeviceId = async () => {
   try {
-    // 1. Cek dulu di memori HP, udah pernah bikin ID belum?
     let id = await AsyncStorage.getItem('device_user_id');
     
     if (!id) {
-      // 2. Kalau belum ada (baru install), kita bikin ID acak
-      // Contoh hasil: "user_170988221_882"
+      // Kalau belum ada ID, bikin random string baru
       id = 'user_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-      
-      // 3. Simpan permanen di HP biar gak berubah-ubah
       await AsyncStorage.setItem('device_user_id', id);
     }
     return id;
   } catch (e) {
-    console.error("Gagal ambil device id", e);
-    return 'unknown_user'; // Jaga-jaga kalau error
+    console.error("Error get device id", e);
+    return 'unknown_user';
   }
 };
 
-// ====================================================================
-// 🎬 BAGIAN 2: URUSAN FILM (MOVIE)
-// ====================================================================
-
-// 1. Ambil Semua Film (GET)
+// Ambil list semua film
 export const getMovies = async () => {
   try {
     const response = await fetch(`${BASE_URL}/movies`);
     const json = await response.json();
     return json;
   } catch (error) {
-    console.log("Error ambil movies:", error);
-    return []; // Kalau error, kasih array kosong biar gak crash
+    console.log("Gagal fetch movies:", error);
+    return []; 
   }
 };
 
-// 2. Ambil Detail 1 Film (GET ID)
+// Ambil detail satu film
 export const getMovieDetail = async (id: number) => {
   try {
     const response = await fetch(`${BASE_URL}/movies/${id}`);
@@ -55,27 +43,26 @@ export const getMovieDetail = async (id: number) => {
   }
 };
 
-// 3. Tambah Film Baru (POST)
+// Post film baru + ID owner
 export const addMovie = async (data: any) => {
   try {
-    // Ambil ID HP kita dulu (biar tau siapa yang upload)
     const myId = await getDeviceId();
 
     const response = await fetch(`${BASE_URL}/movies`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        ...data,       // Judul, tahun, poster, deskripsi
-        owner_id: myId // 👈 Stempel kepemilikan
+        ...data,
+        owner_id: myId 
       }),
     });
-    return response.ok; // Balikin true kalau sukses
+    return response.ok; 
   } catch (error) {
-    return false; // Balikin false kalau gagal
+    return false;
   }
 };
 
-// 4. Hapus Film (DELETE)
+// Hapus film
 export const deleteMovie = async (id: number) => {
   try {
     const response = await fetch(`${BASE_URL}/movies/${id}`, {
@@ -87,7 +74,7 @@ export const deleteMovie = async (id: number) => {
   }
 };
 
-// 5. Edit Film (PATCH)
+// Update data film
 export const updateMovie = async (id: number, data: any) => {
   try {
     const response = await fetch(`${BASE_URL}/movies/${id}`, {
@@ -101,11 +88,7 @@ export const updateMovie = async (id: number, data: any) => {
   }
 };
 
-// ====================================================================
-// ⭐ BAGIAN 3: URUSAN REVIEW & KOMENTAR
-// ====================================================================
-
-// 6. Ambil Semua Review (GET)
+// Ambil list reviews
 export const getReviews = async () => {
   try {
     const response = await fetch(`${BASE_URL}/reviews`);
@@ -116,11 +99,9 @@ export const getReviews = async () => {
   }
 };
 
-// 7. Tambah Review Baru (POST) - UPDATE PENTING DI SINI!
+// Post review baru
 export const addReview = async (movieId: number, name: string, rating: number, comment: string) => {
   try {
-    // 👇 INI YANG PENTING BROW!
-    // Kita ambil ID HP dulu sebelum kirim ke database
     const myDeviceId = await getDeviceId(); 
 
     const response = await fetch(`${BASE_URL}/reviews`, {
@@ -131,7 +112,7 @@ export const addReview = async (movieId: number, name: string, rating: number, c
         reviewer_name: name,
         rating: rating,
         comment: comment,
-        device_id: myDeviceId, // 👈 ID HP dikirim ke Database Xano
+        device_id: myDeviceId, // Kirim ID device buat validasi nanti
       }),
     });
     return response.ok;
@@ -140,11 +121,11 @@ export const addReview = async (movieId: number, name: string, rating: number, c
   }
 };
 
-// 8. Edit Review (PATCH) - FITUR BARU
+// Update review sendiri
 export const updateReview = async (reviewId: number, name: string, rating: number, comment: string) => {
   try {
     const response = await fetch(`${BASE_URL}/reviews/${reviewId}`, {
-      method: 'PATCH', // Update data sebagian
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         reviewer_name: name, 
@@ -158,4 +139,3 @@ export const updateReview = async (reviewId: number, name: string, rating: numbe
     return false;
   }
 };
-

@@ -1,12 +1,10 @@
-// types/index.ts
-
 export interface Movie {
   id: number;
   title: string;
   description: string;
   release_year: number;
-  poster: string;     // URL Poster
-  owner_id?: string;  // 🆕 ID Pemilik (Opsional karena film lama mungkin ga punya)
+  poster: string;
+  owner_id?: string; // Optional, buat cek owner
 }
 
 export interface NewMoviePayload {
@@ -14,7 +12,7 @@ export interface NewMoviePayload {
   description: string;
   release_year: number;
   poster: string;
-  owner_id?: string; // 🆕 Kita kirim ini pas bikin film
+  owner_id?: string;
 }
 
 export interface Review {
@@ -24,6 +22,5 @@ export interface Review {
   rating: number;
   comment: string;
   created_at: number;
-  // 👇 TAMBAHIN INI
-  device_id?: string; // Tanda tanya (?) artinya opsional, jaga-jaga kalau data lama belum punya ID
+  device_id?: string; // ID device user
 }
